@@ -478,6 +478,17 @@ export function PlayPage() {
       ? `White +${materialDelta}`
       : `Black +${Math.abs(materialDelta)}`;
   const headline = statusHeadline(game);
+  const gameFinished = game?.status === "finished";
+  const endgameClassName = gameFinished
+    ? game?.winner
+      ? "winner"
+      : "draw"
+    : "";
+  const endgameMessage = gameFinished
+    ? game?.winner
+      ? `${capitalize(game.winner)} wins`
+      : "Draw"
+    : "";
   const opponentLastMove = opponentLastMoveMetadata(game?.moves || [], game?.san_moves || [], playerColor);
   const selectedSquareHint = selectedSquare ? `Selected: ${selectedSquare} (${targetSquares.length} legal target${targetSquares.length === 1 ? "" : "s"})` : "Click a piece to view legal targets";
 
@@ -514,6 +525,10 @@ export function PlayPage() {
               onChange={(event) => setBotLevel(event.target.value)}
             />
           </label>
+
+          <p className="bot-help">
+            Bot level controls engine strength (0-20). Engine Bot always uses this level. ML Bot first tries the ML model, then falls back to engine/random using this level when needed.
+          </p>
 
           <button onClick={startGame} disabled={loading}>
             {loading ? "Starting..." : "Start New Game"}
@@ -680,15 +695,18 @@ export function PlayPage() {
               <span>{materialState}</span>
             </div>
 
-            <ChessBoard
-              fen={game?.fen || ""}
-              selectedSquare={selectedSquare}
-              targetSquares={targetSquares}
-              lastMove={opponentLastMove.uci}
-              checkedKingSquare={game?.checked_king_square || null}
-              perspective={boardPerspective}
-              onSquareClick={handleSquareClick}
-            />
+            <div className={["board-stage", gameFinished ? "is-finished" : "", endgameClassName].filter(Boolean).join(" ")}>
+              <ChessBoard
+                fen={game?.fen || ""}
+                selectedSquare={selectedSquare}
+                targetSquares={targetSquares}
+                lastMove={opponentLastMove.uci}
+                checkedKingSquare={game?.checked_king_square || null}
+                perspective={boardPerspective}
+                onSquareClick={handleSquareClick}
+              />
+              {gameFinished && <div className="endgame-banner">{endgameMessage}</div>}
+            </div>
           </div>
 
           <aside className="graveyard-panel">

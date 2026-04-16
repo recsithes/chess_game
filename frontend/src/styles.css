@@ -67,6 +67,13 @@ p {
   align-items: end;
 }
 
+.bot-help {
+  margin: 0;
+  font-size: 12px;
+  color: #5d4f40;
+  max-width: 560px;
+}
+
 label {
   display: flex;
   flex-direction: column;
@@ -341,6 +348,70 @@ button:disabled {
   box-shadow:
     0 16px 40px var(--board-shadow),
     inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.board-stage {
+  position: relative;
+}
+
+.board-stage.is-finished .board {
+  animation: board-endgame-glow 1.2s ease-in-out infinite alternate;
+}
+
+.board-stage.is-finished.winner .board {
+  box-shadow:
+    0 16px 40px var(--board-shadow),
+    0 0 20px rgba(22, 129, 82, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.board-stage.is-finished.draw .board {
+  box-shadow:
+    0 16px 40px var(--board-shadow),
+    0 0 20px rgba(57, 88, 128, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.endgame-banner {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  padding: 10px 20px;
+  font-size: clamp(20px, 4vw, 34px);
+  font-weight: 700;
+  color: #fff;
+  background: rgba(20, 35, 58, 0.85);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  animation: endgame-banner-pop 900ms ease-out;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+@keyframes board-endgame-glow {
+  from {
+    transform: scale(1);
+    filter: saturate(1);
+  }
+
+  to {
+    transform: scale(1.01);
+    filter: saturate(1.14);
+  }
+}
+
+@keyframes endgame-banner-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -44%) scale(0.86);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 .square {
