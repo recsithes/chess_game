@@ -44,3 +44,4 @@ For persistent production data, switch `DATABASE_URL` to a managed Postgres inst
 2. If Render shows `unknown type "static_site"`, use `type: web` with `runtime: static` for the frontend service.
 3. If Render shows `services[1].plan no such plan free for service type web`, remove `plan` from the frontend service when it uses `runtime: static`.
 4. Keep `plan: free` on the backend web service to avoid defaulting that service to paid `starter`.
+5. If frontend requests fail with `404` from `...onrender.com/api/games`, verify `VITE_API_BASE_URL` points to your actual backend service hostname (for example, names can include a suffix like `-0sci`).

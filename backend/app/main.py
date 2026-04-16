@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Chess ML Backend", version="0.1.0", lifespan=lifespan)
 
 cors_origins = os.getenv(
-    "https://chess-game-frontend-l4q8.onrender.com",
+    "CORS_ORIGINS",
     "http://localhost:5173,http://127.0.0.1:5173,http://localhost:8080,http://127.0.0.1:8080",
 )
 allowed_origins = [origin.strip() for origin in cors_origins.split(",") if origin.strip()]
