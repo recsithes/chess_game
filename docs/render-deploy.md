@@ -42,4 +42,5 @@ For persistent production data, switch `DATABASE_URL` to a managed Postgres inst
 
 1. If Render shows `unknown type "static"`, your blueprint is using invalid legacy syntax.
 2. If Render shows `unknown type "static_site"`, use `type: web` with `runtime: static` for the frontend service.
-3. If Render asks for payment info, set `plan: free` for each service in [render.yaml](../render.yaml). Without this, Render may default new services to a paid `starter` plan.
+3. If Render shows `services[1].plan no such plan free for service type web`, remove `plan` from the frontend service when it uses `runtime: static`.
+4. Keep `plan: free` on the backend web service to avoid defaulting that service to paid `starter`.
