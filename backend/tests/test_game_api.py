@@ -64,7 +64,18 @@ def test_recommendation_endpoint() -> None:
 
         payload = recommendation_response.json()
         assert payload["mode"] == "ml"
-        assert payload["source"] in {"ml", "engine", "random", "none"}
+        assert payload["source"] in {"ml", "engine", "heuristic", "none"}
+
+
+def test_create_game_accepts_level_50() -> None:
+    with TestClient(app) as client:
+        create_response = client.post(
+            "/api/games",
+            json={"player_color": "white", "bot_mode": "engine", "bot_level": 50},
+        )
+        assert create_response.status_code == 200
+        payload = create_response.json()
+        assert payload["bot_level"] == 50
 
 
 def test_cors_preflight_for_games_endpoint() -> None:
