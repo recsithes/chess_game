@@ -333,6 +333,7 @@ button:disabled {
   aspect-ratio: 1;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, minmax(0, 1fr));
   border: 10px solid var(--board-frame);
   border-radius: 16px;
   overflow: hidden;
