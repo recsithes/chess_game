@@ -10,7 +10,7 @@ BotMode = Literal["engine", "ml"]
 class GameCreateRequest(BaseModel):
     player_color: Color = "white"
     bot_mode: BotMode = "engine"
-    bot_level: int = Field(default=5, ge=0, le=20)
+    bot_level: int = Field(default=5, ge=0, le=50)
 
 
 class MoveRequest(BaseModel):

@@ -283,7 +283,7 @@ export function PlayPage() {
         body: JSON.stringify({
           player_color: playerColor,
           bot_mode: botMode,
-          bot_level: Number(botLevel)
+          bot_level: Math.max(0, Math.min(50, Number(botLevel)))
         })
       });
 
@@ -520,14 +520,14 @@ export function PlayPage() {
             <input
               type="number"
               min={0}
-              max={20}
+              max={50}
               value={botLevel}
               onChange={(event) => setBotLevel(event.target.value)}
             />
           </label>
 
           <p className="bot-help">
-            Bot level controls engine strength (0-20). Engine Bot always uses this level. ML Bot first tries the ML model, then falls back to engine/random using this level when needed.
+            Bot level controls engine strength (0-50). Engine Bot always uses this level. ML Bot first tries the ML model, then falls back to engine/heuristic using this level when needed.
           </p>
 
           <button onClick={startGame} disabled={loading}>

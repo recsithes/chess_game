@@ -1,4 +1,3 @@
-import random
 import shutil
 from pathlib import Path
 
@@ -16,6 +15,9 @@ except ImportError:
 
 
 class BotService:
+    _MAX_API_LEVEL = 50
+    _MAX_ENGINE_SKILL = 20
+
     def __init__(
         self,
         engine_path: str | None = None,
@@ -77,22 +79,99 @@ class BotService:
         features.append(1 if board.turn == chess.WHITE else -1)
         return features
 
+    @classmethod
+    def _normalize_level(cls, level: int) -> int:
+        return max(0, min(level, cls._MAX_API_LEVEL))
+
+    @staticmethod
+    def _evaluate_board(board: chess.Board) -> int:
+        if board.is_checkmate():
+            return -100000
+        if board.is_stalemate() or board.is_insufficient_material() or board.can_claim_threefold_repetition() or board.can_claim_fifty_moves():
+            return 0
+
+        piece_values = {
+            chess.PAWN: 100,
+            chess.KNIGHT: 320,
+            chess.BISHOP: 330,
+            chess.ROOK: 500,
+            chess.QUEEN: 900,
+        }
+        score = 0
+        for piece_type, value in piece_values.items():
+            score += len(board.pieces(piece_type, chess.WHITE)) * value
+            score -= len(board.pieces(piece_type, chess.BLACK)) * value
+
+        return score if board.turn == chess.WHITE else -score
+
+    def _negamax(
+        self,
+        board: chess.Board,
+        depth: int,
+        alpha: int,
+        beta: int,
+    ) -> tuple[int, chess.Move | None]:
+        if depth == 0 or board.is_game_over(claim_draw=True):
+            return self._evaluate_board(board), None
+
+        best_score = -1_000_000
+        best_move: chess.Move | None = None
+        ordered_moves = sorted(
+            board.legal_moves,
+            key=lambda move: (
+                board.is_capture(move),
+                board.gives_check(move),
+                move.promotion is not None,
+            ),
+            reverse=True,
+        )
+
+        for move in ordered_moves:
+            board.push(move)
+            candidate_score, _ = self._negamax(board, depth - 1, -beta, -alpha)
+            board.pop()
+            score = -candidate_score
+
+            if score > best_score:
+                best_score = score
+                best_move = move
+
+            alpha = max(alpha, score)
+            if alpha >= beta:
+                break
+
+        return best_score, best_move
+
+    def _choose_fallback_move(self, board: chess.Board, level: int) -> str | None:
+        legal_moves = list(board.legal_moves)
+        if not legal_moves:
+            return None
+
+        normalized_level = self._normalize_level(level)
+        depth = min(3, 1 + normalized_level // 20)
+        _, best_move = self._negamax(board, depth=depth, alpha=-1_000_000, beta=1_000_000)
+        if best_move is None:
+            return legal_moves[0].uci()
+        return best_move.uci()
+
     def _choose_engine_move(self, board: chess.Board, level: int) -> tuple[str | None, str]:
+        normalized_level = self._normalize_level(level)
         if self._engine is not None:
             try:
                 self._engine.set_fen_position(board.fen())
-                self._engine.set_skill_level(level)
+                skill_level = round((normalized_level / self._MAX_API_LEVEL) * self._MAX_ENGINE_SKILL)
+                self._engine.set_skill_level(skill_level)
                 best_move = self._engine.get_best_move()
                 if best_move:
                     return best_move, "engine"
             except Exception:
                 pass
 
-        legal_moves = list(board.legal_moves)
-        if not legal_moves:
+        fallback_move = self._choose_fallback_move(board, normalized_level)
+        if fallback_move is None:
             return None, "none"
 
-        return random.choice(legal_moves).uci(), "random"
+        return fallback_move, "heuristic"
 
     def _choose_ml_move(self, board: chess.Board) -> tuple[str | None, float | None]:
         if self._ml_model is None:
