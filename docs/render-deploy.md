@@ -37,3 +37,7 @@ For persistent production data, switch `DATABASE_URL` to a managed Postgres inst
 1. Open backend health URL: `https://<backend-service>.onrender.com/health`
 2. Open frontend URL and start a new game.
 3. Verify no browser CORS errors in devtools.
+
+## Troubleshooting
+
+1. If Render shows `unknown type "static"`, update `render.yaml` to use `type: static_site` for the frontend service.
