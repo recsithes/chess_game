@@ -304,7 +304,8 @@ export function PlayPage() {
   }
 
   async function submitMove(overrideMove) {
-    const uciMove = (overrideMove || moveInput).trim();
+    const rawMove = typeof overrideMove === "string" ? overrideMove : moveInput;
+    const uciMove = rawMove.trim();
     if (!game || !uciMove) {
       return;
     }
