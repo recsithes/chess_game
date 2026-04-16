@@ -40,4 +40,5 @@ For persistent production data, switch `DATABASE_URL` to a managed Postgres inst
 
 ## Troubleshooting
 
-1. If Render shows `unknown type "static"`, update `render.yaml` to use `type: static_site` for the frontend service.
+1. If Render shows `unknown type "static"`, your blueprint is using invalid legacy syntax.
+2. If Render shows `unknown type "static_site"`, use `type: web` with `runtime: static` for the frontend service.
