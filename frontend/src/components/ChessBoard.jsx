@@ -87,6 +87,7 @@ export function ChessBoard({
   promotionPicker = null,
   onSquareClick,
   onPromotionSelect,
+  onPromotionCancel,
 }) {
   const squareToPiece = fen ? fenBoardToMap(fen) : new Map();
   const displaySquares = buildDisplaySquares(perspective);
@@ -134,6 +135,12 @@ export function ChessBoard({
                 className="promotion-dropdown"
                 value={promotionPicker.selectedOption || ""}
                 aria-label={`Choose promotion piece on ${squareName}`}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    onPromotionCancel?.();
+                  }
+                }}
                 onChange={(event) => {
                   const option = event.target.value;
                   if (option) {

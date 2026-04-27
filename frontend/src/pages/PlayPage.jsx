@@ -407,6 +407,12 @@ export function PlayPage() {
     submitMove(move);
   }
 
+  function cancelPromotionSelection() {
+    setPendingPromotion(null);
+    setPromotionSelection("");
+    clearSelection();
+  }
+
   async function fetchRecommendation() {
     if (!game) {
       return;
@@ -521,12 +527,16 @@ export function PlayPage() {
 
           <label>
             Bot mode
-            <input className="readonly-field" type="text" value="Engine Bot" readOnly />
+            <div className="readonly-field readonly-static" role="note" aria-label="Bot mode">
+              Engine Bot
+            </div>
           </label>
 
           <label>
             Bot model
-            <input className="readonly-field" type="text" value="Stockfish + fallback search" readOnly />
+            <div className="readonly-field readonly-static" role="note" aria-label="Bot model">
+              Stockfish + fallback search
+            </div>
           </label>
 
           <label>
@@ -716,6 +726,7 @@ export function PlayPage() {
                 }
                 onSquareClick={handleSquareClick}
                 onPromotionSelect={choosePromotion}
+                onPromotionCancel={cancelPromotionSelection}
               />
               {gameFinished && <div className="endgame-banner">{endgameMessage}</div>}
               {aiThinking && <div className="ai-thinking-overlay">AI is making a move…</div>}

@@ -75,10 +75,18 @@ p {
 }
 
 .readonly-field {
+  border: 1px solid #dbc6ab;
+  border-radius: 10px;
+  padding: 10px;
   color: #5f5448;
   background: #f7efe3;
-  border-color: #dbc6ab;
   font-weight: 600;
+}
+
+.readonly-static {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
 }
 
 label {
