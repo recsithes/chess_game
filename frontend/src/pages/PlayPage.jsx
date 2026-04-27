@@ -608,7 +608,7 @@ export function PlayPage() {
           </button>
         </div>
 
-        {pendingPromotion && <p className="promotion-hint">Choose promotion from the dropdown on the destination square.</p>}
+        {pendingPromotion && <p className="promotion-hint">Choose a promotion piece icon on the destination square.</p>}
 
         {sanRows.length > 0 && (
           <section className="history">
@@ -719,8 +719,10 @@ export function PlayPage() {
                   pendingPromotion
                     ? {
                         square: pendingPromotion.to,
+                        fromSquare: pendingPromotion.from,
                         options: pendingPromotion.options,
                         selectedOption: promotionSelection,
+                        pieceColor: playerColor,
                       }
                     : null
                 }

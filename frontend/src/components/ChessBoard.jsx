@@ -76,6 +76,14 @@ function coordinateLabels(square, displayIndex) {
   };
 }
 
+function promotionPieceCode(option, pieceColor) {
+  if (!option) {
+    return "";
+  }
+  const normalized = option.toLowerCase();
+  return pieceColor === "black" ? normalized : normalized.toUpperCase();
+}
+
 export function ChessBoard({
   fen,
   selectedSquare,
@@ -97,13 +105,21 @@ export function ChessBoard({
     <div className={["board", isTransitioning ? "is-transitioning" : ""].filter(Boolean).join(" ")} role="img" aria-label="Chess board">
       {displaySquares.map((squareName, index) => {
         const pieceCode = squareToPiece.get(squareName) || "";
-        const piece = pieceCode ? PIECE_MAP[pieceCode] || "" : "";
-        const pieceTone = pieceCode && pieceCode === pieceCode.toUpperCase() ? "white-piece" : "black-piece";
         const isSelected = selectedSquare === squareName;
         const isTarget = targetSet.has(squareName);
         const isLastMove = isLastMoveSquare(squareName, lastMove);
         const isCheckedKing = checkedKingSquare === squareName;
         const hasPromotionPicker = promotionPicker && promotionPicker.square === squareName;
+        const isPromotionFromSquare = Boolean(
+          promotionPicker && promotionPicker.selectedOption && promotionPicker.fromSquare === squareName
+        );
+        const isPromotionPreviewSquare = Boolean(hasPromotionPicker && promotionPicker.selectedOption);
+        const previewPieceCode = isPromotionPreviewSquare
+          ? promotionPieceCode(promotionPicker.selectedOption, promotionPicker.pieceColor)
+          : "";
+        const displayPieceCode = isPromotionFromSquare ? "" : previewPieceCode || pieceCode;
+        const piece = displayPieceCode ? PIECE_MAP[displayPieceCode] || "" : "";
+        const pieceTone = displayPieceCode && displayPieceCode === displayPieceCode.toUpperCase() ? "white-piece" : "black-piece";
         const labels = coordinateLabels(squareName, index);
 
         const className = [
@@ -130,34 +146,32 @@ export function ChessBoard({
               {labels.rank && <small className="rank-label">{labels.rank}</small>}
               {labels.file && <small className="file-label">{labels.file}</small>}
             </button>
-            {hasPromotionPicker && (
-              <select
-                className="promotion-dropdown"
-                value={promotionPicker.selectedOption || ""}
-                autoFocus
-                aria-label={`Choose promotion piece on ${squareName}`}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") {
-                    event.preventDefault();
-                    onPromotionCancel?.();
-                  }
-                }}
-                onChange={(event) => {
-                  const option = event.target.value;
-                  if (option) {
-                    onPromotionSelect?.(option);
-                  }
-                }}
-              >
-                <option value="" disabled>
-                  Promote
-                </option>
-                {promotionPicker.options.map((option) => (
-                  <option key={option} value={option}>
-                    {option.toUpperCase()}
-                  </option>
-                ))}
-              </select>
+            {hasPromotionPicker && !promotionPicker.selectedOption && (
+              <div className="promotion-picker" role="group" aria-label={`Choose promotion piece on ${squareName}`}>
+                {promotionPicker.options.map((option, optionIndex) => {
+                  const optionCode = promotionPieceCode(option, promotionPicker.pieceColor);
+                  const optionSymbol = PIECE_MAP[optionCode] || option.toUpperCase();
+                  const optionTone = optionCode === optionCode.toUpperCase() ? "white-piece" : "black-piece";
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      className="promotion-option"
+                      aria-label={`Promote to ${option.toUpperCase()}`}
+                      autoFocus={optionIndex === 0}
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") {
+                          event.preventDefault();
+                          onPromotionCancel?.();
+                        }
+                      }}
+                      onClick={() => onPromotionSelect?.(option)}
+                    >
+                      <span className={["piece-symbol", optionTone].filter(Boolean).join(" ")}>{optionSymbol}</span>
+                    </button>
+                  );
+                })}
+              </div>
             )}
           </div>
         );

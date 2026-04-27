@@ -480,18 +480,41 @@ button:disabled {
   pointer-events: none;
 }
 
-.promotion-dropdown {
+.promotion-picker {
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 76%;
+  width: 78%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
   z-index: 3;
-  font-size: 12px;
-  padding: 6px;
+  padding: 4px;
   border: 1px solid #885c2f;
   background: #fff8ec;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+
+.promotion-option {
+  width: 100%;
+  border: 1px solid #c79c70;
+  border-radius: 4px;
+  background: #fffef7;
+  padding: 4px 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.promotion-option:hover {
+  background: #f5e3cc;
+}
+
+.promotion-option:focus-visible {
+  outline: 2px solid #0f6b5a;
+  outline-offset: 1px;
 }
 
 .ai-thinking-overlay {
