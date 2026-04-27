@@ -123,7 +123,6 @@ export function ChessBoard({
               className={className}
               onClick={() => onSquareClick?.(squareName)}
               aria-label={`Square ${squareName}`}
-              disabled={hasPromotionPicker}
             >
               {isTarget && <span className="target-dot" aria-hidden="true" />}
               <span className={["piece-symbol", pieceTone].filter(Boolean).join(" ")}>{piece}</span>
