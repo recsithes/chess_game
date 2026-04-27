@@ -340,6 +340,9 @@ export function PlayPage() {
       await refreshGameState(game.game_id);
     } catch (err) {
       setError(normalizeRequestError(err, "Failed to play move"));
+      if (pendingPromotion) {
+        setPromotionSelection("");
+      }
     } finally {
       setAiThinking(false);
       setLoading(false);
