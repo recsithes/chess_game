@@ -396,7 +396,6 @@ export function PlayPage() {
     if (!pendingPromotion) {
       return;
     }
-    setPromotionSelection(piece);
     const move = `${pendingPromotion.from}${pendingPromotion.to}${piece}`;
     setMoveInput(move);
     submitMove(move);
@@ -536,7 +535,7 @@ export function PlayPage() {
           </label>
 
           <p className="bot-help">
-            Bot level controls engine strength (0-50). A single stronger engine flow is now used for all games.
+            Bot level controls engine strength (0-50). A single engine mode is now used for all games.
           </p>
 
           <button onClick={startGame} disabled={loading}>
