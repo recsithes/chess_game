@@ -84,6 +84,22 @@ function promotionPieceCode(option, pieceColor) {
   return pieceColor === "black" ? normalized : normalized.toUpperCase();
 }
 
+function promotionPreviewPieceCode(squareName, pieceCode, promotionPicker) {
+  if (!promotionPicker || !promotionPicker.selectedOption) {
+    return pieceCode;
+  }
+
+  if (promotionPicker.fromSquare === squareName) {
+    return "";
+  }
+
+  if (promotionPicker.square === squareName) {
+    return promotionPieceCode(promotionPicker.selectedOption, promotionPicker.pieceColor);
+  }
+
+  return pieceCode;
+}
+
 export function ChessBoard({
   fen,
   selectedSquare,
@@ -110,15 +126,11 @@ export function ChessBoard({
         const isLastMove = isLastMoveSquare(squareName, lastMove);
         const isCheckedKing = checkedKingSquare === squareName;
         const hasPromotionPicker = promotionPicker && promotionPicker.square === squareName;
-        const isPromotionFromSquare = promotionPicker && promotionPicker.selectedOption && promotionPicker.fromSquare === squareName;
-        const isPromotionPreviewSquare = hasPromotionPicker && promotionPicker.selectedOption;
-        const previewPieceCode = isPromotionPreviewSquare
-          ? promotionPieceCode(promotionPicker.selectedOption, promotionPicker.pieceColor)
-          : "";
-        const displayPieceCode = isPromotionFromSquare ? "" : previewPieceCode || pieceCode;
+        const displayPieceCode = promotionPreviewPieceCode(squareName, pieceCode, promotionPicker);
         const piece = displayPieceCode ? PIECE_MAP[displayPieceCode] || "" : "";
         const pieceTone = displayPieceCode && displayPieceCode === displayPieceCode.toUpperCase() ? "white-piece" : "black-piece";
         const labels = coordinateLabels(squareName, index);
+        const shouldShowPromotionPicker = hasPromotionPicker && !promotionPicker.selectedOption;
 
         const className = [
           "square",
@@ -144,7 +156,7 @@ export function ChessBoard({
               {labels.rank && <small className="rank-label">{labels.rank}</small>}
               {labels.file && <small className="file-label">{labels.file}</small>}
             </button>
-            {hasPromotionPicker && !promotionPicker.selectedOption && (
+            {shouldShowPromotionPicker && (
               <div className="promotion-picker" role="group" aria-label={`Choose promotion piece on ${squareName}`}>
                 {promotionPicker.options.map((option, optionIndex) => {
                   const optionCode = promotionPieceCode(option, promotionPicker.pieceColor);
