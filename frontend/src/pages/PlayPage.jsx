@@ -527,14 +527,14 @@ export function PlayPage() {
 
           <label>
             Bot mode
-            <div className="readonly-field readonly-static" role="note" aria-label="Bot mode">
+            <div className="readonly-field readonly-static" aria-label="Bot mode">
               Engine Bot
             </div>
           </label>
 
           <label>
             Bot model
-            <div className="readonly-field readonly-static" role="note" aria-label="Bot model">
+            <div className="readonly-field readonly-static" aria-label="Bot model">
               Stockfish + fallback search
             </div>
           </label>
