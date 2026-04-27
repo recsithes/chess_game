@@ -611,7 +611,7 @@ export function PlayPage() {
           </button>
         </div>
 
-        {pendingPromotion && <p className="promotion-hint">Choose a promotion piece icon on the destination square.</p>}
+        {pendingPromotion && <p className="promotion-hint">Choose a promotion piece on the destination square.</p>}
 
         {sanRows.length > 0 && (
           <section className="history">
