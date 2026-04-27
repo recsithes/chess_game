@@ -344,11 +344,11 @@ button:disabled {
   box-shadow:
     0 16px 40px var(--board-shadow),
     inset 0 0 0 1px rgba(255, 255, 255, 0.25);
-  transition: filter 160ms ease, transform 160ms ease;
+  transition: opacity 160ms ease, transform 160ms ease;
 }
 
 .board.is-transitioning {
-  filter: saturate(0.75) brightness(0.9);
+  opacity: 0.8;
   transform: scale(0.995);
 }
 
