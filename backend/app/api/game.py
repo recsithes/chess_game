@@ -103,7 +103,7 @@ def play_bot_move(game_id: str, request: Request) -> BotMoveResponse:
         raise HTTPException(status_code=400, detail="Game already finished")
 
     if chess_service.is_player_turn(session):
-        raise HTTPException(status_code=409, detail="Cannot play bot move during player turn")
+        raise HTTPException(status_code=409, detail="Bot move requested but it is currently the player's turn")
 
     recommendation = bot_service.recommend_move(
         board=session.board,
