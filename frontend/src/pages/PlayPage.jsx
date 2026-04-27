@@ -233,6 +233,7 @@ export function PlayPage() {
   const [pgnCopied, setPgnCopied] = useState(false);
   const [boardPerspective, setBoardPerspective] = useState("white");
   const [pendingPromotion, setPendingPromotion] = useState(null);
+  const [promotionSelection, setPromotionSelection] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [aiThinking, setAiThinking] = useState(false);
@@ -275,6 +276,7 @@ export function PlayPage() {
     setPgnCopied(false);
     setBoardPerspective(playerColor);
     setPendingPromotion(null);
+    setPromotionSelection("");
     clearSelection();
 
     try {
@@ -333,6 +335,7 @@ export function PlayPage() {
       setLastExchange(payload);
       setMoveInput("");
       setPendingPromotion(null);
+      setPromotionSelection("");
       clearSelection();
       await refreshGameState(game.game_id);
     } catch (err) {
@@ -376,6 +379,7 @@ export function PlayPage() {
     const promotionOptions = promotionOptionsForMove(legalMoves, selectedSquare, squareName);
     if (promotionOptions.length > 0) {
       setPendingPromotion({ from: selectedSquare, to: squareName, options: promotionOptions });
+      setPromotionSelection("");
       return;
     }
 
@@ -393,6 +397,7 @@ export function PlayPage() {
     if (!pendingPromotion) {
       return;
     }
+    setPromotionSelection(piece);
     const move = `${pendingPromotion.from}${pendingPromotion.to}${piece}`;
     setMoveInput(move);
     submitMove(move);
@@ -701,6 +706,7 @@ export function PlayPage() {
                     ? {
                         square: pendingPromotion.to,
                         options: pendingPromotion.options,
+                        selectedOption: promotionSelection,
                       }
                     : null
                 }

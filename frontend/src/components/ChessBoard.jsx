@@ -133,7 +133,7 @@ export function ChessBoard({
             {hasPromotionPicker && (
               <select
                 className="promotion-dropdown"
-                defaultValue=""
+                value={promotionPicker.selectedOption || ""}
                 aria-label={`Choose promotion piece on ${squareName}`}
                 onChange={(event) => {
                   const option = event.target.value;
