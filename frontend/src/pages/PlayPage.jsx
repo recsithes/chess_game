@@ -339,7 +339,7 @@ export function PlayPage() {
           throw new Error(pickApiErrorMessage(botResponse, botPayload, "Failed to play bot move"));
         }
         if (!botPayload || !botPayload.game_state) {
-          throw new Error("Server returned an incomplete bot move response.");
+          throw new Error("Server returned a bot move response without game_state.");
         }
         setLastExchange((current) => ({
           player_move: current?.player_move || payload.player_move,

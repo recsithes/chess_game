@@ -43,17 +43,20 @@ class GameStateResponse(BaseModel):
 
 class MoveResponse(BaseModel):
     player_move: str
-    bot_move: str | None
+    bot_move: str | None = Field(
+        default=None,
+        description="Bot move if played in the same request; null when defer_bot is true or game ended.",
+    )
     bot_source: str | None = None
     bot_confidence: float | None = None
-    game_state: GameStateResponse
+    game_state: GameStateResponse = Field(description="Current game state after processing the request.")
 
 
 class BotMoveResponse(BaseModel):
-    bot_move: str | None
+    bot_move: str | None = Field(default=None, description="Bot move if one was available to play.")
     bot_source: str | None = None
     bot_confidence: float | None = None
-    game_state: GameStateResponse
+    game_state: GameStateResponse = Field(description="Current game state after bot move processing.")
 
 
 class PgnResponse(BaseModel):
