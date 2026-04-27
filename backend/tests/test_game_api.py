@@ -50,6 +50,31 @@ def test_reject_illegal_move() -> None:
         assert "Illegal move" in move_response.json()["detail"]
 
 
+def test_deferred_bot_move_flow() -> None:
+    with TestClient(app) as client:
+        create_response = client.post(
+            "/api/games",
+            json={"player_color": "white", "bot_mode": "engine", "bot_level": 1},
+        )
+        game_id = create_response.json()["game_id"]
+
+        player_move_response = client.post(
+            f"/api/games/{game_id}/move",
+            json={"uci": "e2e4", "defer_bot": True},
+        )
+        assert player_move_response.status_code == 200
+        player_move_payload = player_move_response.json()
+        assert player_move_payload["player_move"] == "e2e4"
+        assert player_move_payload["bot_move"] is None
+        assert player_move_payload["game_state"]["turn"] == "black"
+
+        bot_move_response = client.post(f"/api/games/{game_id}/bot-move")
+        assert bot_move_response.status_code == 200
+        bot_move_payload = bot_move_response.json()
+        assert bot_move_payload["game_state"]["turn"] == "white"
+        assert bot_move_payload["bot_source"] in {"engine", "heuristic", "none"}
+
+
 def test_recommendation_endpoint() -> None:
     with TestClient(app) as client:
         create_response = client.post(

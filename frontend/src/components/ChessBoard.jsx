@@ -105,6 +105,7 @@ export function ChessBoard({
   selectedSquare,
   targetSquares,
   lastMove,
+  moveAnimationToken = 0,
   checkedKingSquare,
   perspective = "white",
   isTransitioning = false,
@@ -124,6 +125,8 @@ export function ChessBoard({
         const isSelected = selectedSquare === squareName;
         const isTarget = targetSet.has(squareName);
         const isLastMove = isLastMoveSquare(squareName, lastMove);
+        const isLastMoveFrom = Boolean(lastMove) && squareName === lastMove.slice(0, 2);
+        const isLastMoveTo = Boolean(lastMove) && squareName === lastMove.slice(2, 4);
         const isCheckedKing = checkedKingSquare === squareName;
         const hasPromotionPicker = promotionPicker && promotionPicker.square === squareName;
         const displayPieceCode = promotionPreviewPieceCode(squareName, pieceCode, promotionPicker);
@@ -138,6 +141,8 @@ export function ChessBoard({
           isSelected ? "selected" : "",
           isTarget ? "target" : "",
           isLastMove ? "last-move" : "",
+          isLastMoveFrom ? "last-move-from" : "",
+          isLastMoveTo ? "last-move-to" : "",
           isCheckedKing ? "checked" : "",
         ]
           .filter(Boolean)
@@ -152,7 +157,12 @@ export function ChessBoard({
               aria-label={`Square ${squareName}`}
             >
               {isTarget && <span className="target-dot" aria-hidden="true" />}
-              <span className={["piece-symbol", pieceTone].filter(Boolean).join(" ")}>{piece}</span>
+              <span
+                className={["piece-symbol", pieceTone].filter(Boolean).join(" ")}
+                data-move-animation-token={isLastMoveTo ? moveAnimationToken : undefined}
+              >
+                {piece}
+              </span>
               {labels.rank && <small className="rank-label">{labels.rank}</small>}
               {labels.file && <small className="file-label">{labels.file}</small>}
             </button>

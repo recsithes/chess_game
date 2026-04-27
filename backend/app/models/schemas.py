@@ -15,13 +15,7 @@ class GameCreateRequest(BaseModel):
 
 class MoveRequest(BaseModel):
     uci: str = Field(min_length=4, max_length=5)
-
-
-class MoveResponse(BaseModel):
-    player_move: str
-    bot_move: str | None
-    bot_source: str | None = None
-    bot_confidence: float | None = None
+    defer_bot: bool = False
 
 
 class GameStateResponse(BaseModel):
@@ -45,6 +39,21 @@ class GameStateResponse(BaseModel):
     is_stalemate: bool
     checked_king_square: str | None
     legal_moves: list[str]
+
+
+class MoveResponse(BaseModel):
+    player_move: str
+    bot_move: str | None
+    bot_source: str | None = None
+    bot_confidence: float | None = None
+    game_state: GameStateResponse
+
+
+class BotMoveResponse(BaseModel):
+    bot_move: str | None
+    bot_source: str | None = None
+    bot_confidence: float | None = None
+    game_state: GameStateResponse
 
 
 class PgnResponse(BaseModel):
