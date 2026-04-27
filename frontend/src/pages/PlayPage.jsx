@@ -238,6 +238,7 @@ export function PlayPage() {
   const [aiThinking, setAiThinking] = useState(false);
 
   const legalMoves = game?.legal_moves || [];
+  const hasPendingPromotion = Boolean(pendingPromotion);
 
   const canPlayMove = useMemo(() => {
     if (!game) {
@@ -350,6 +351,10 @@ export function PlayPage() {
       return;
     }
 
+    if (hasPendingPromotion) {
+      return;
+    }
+
     setError("");
 
     if (!selectedSquare) {
@@ -396,6 +401,7 @@ export function PlayPage() {
     if (!pendingPromotion) {
       return;
     }
+    setPromotionSelection(piece);
     const move = `${pendingPromotion.from}${pendingPromotion.to}${piece}`;
     setMoveInput(move);
     submitMove(move);
@@ -515,12 +521,12 @@ export function PlayPage() {
 
           <label>
             Bot mode
-            <input type="text" value="Engine Bot" readOnly />
+            <input className="readonly-field" type="text" value="Engine Bot" readOnly />
           </label>
 
           <label>
             Bot model
-            <input type="text" value="Stockfish + fallback search" readOnly />
+            <input className="readonly-field" type="text" value="Stockfish + fallback search" readOnly />
           </label>
 
           <label>
@@ -576,18 +582,18 @@ export function PlayPage() {
             placeholder="e2e4"
             value={moveInput}
             onChange={(event) => setMoveInput(event.target.value)}
-            disabled={!canPlayMove || loading}
+            disabled={!canPlayMove || loading || hasPendingPromotion}
           />
-          <button onClick={submitMove} disabled={!canPlayMove || loading}>
+          <button onClick={submitMove} disabled={!canPlayMove || loading || hasPendingPromotion}>
             Play Move
           </button>
-          <button onClick={fetchRecommendation} disabled={!game || loading}>
+          <button onClick={fetchRecommendation} disabled={!game || loading || hasPendingPromotion}>
             Recommend Move
           </button>
-          <button onClick={fetchPgn} disabled={!game || loading}>
+          <button onClick={fetchPgn} disabled={!game || loading || hasPendingPromotion}>
             Load PGN
           </button>
-          <button onClick={copyPgn} disabled={!pgn}>
+          <button onClick={copyPgn} disabled={!pgn || hasPendingPromotion}>
             {pgnCopied ? "PGN Copied" : "Copy PGN"}
           </button>
         </div>
