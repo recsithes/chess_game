@@ -253,19 +253,6 @@ export function PlayPage() {
     setTargetSquares([]);
   }
 
-  async function refreshGameState(gameId) {
-    const gameStateResponse = await fetch(apiUrl(`/api/games/${gameId}`));
-    const gameStatePayload = await parseJsonPayload(gameStateResponse);
-    if (!gameStateResponse.ok) {
-      throw new Error(pickApiErrorMessage(gameStateResponse, gameStatePayload, "Failed to refresh game"));
-    }
-    if (!gameStatePayload) {
-      throw new Error("Server returned an empty game state response.");
-    }
-
-    setGame(gameStatePayload);
-  }
-
   async function startGame() {
     setLoading(true);
     setError("");
@@ -314,14 +301,14 @@ export function PlayPage() {
     }
 
     setLoading(true);
-    setAiThinking(true);
+    setAiThinking(false);
     setError("");
 
     try {
       const response = await fetch(apiUrl(`/api/games/${game.game_id}/move`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uci: uciMove })
+        body: JSON.stringify({ uci: uciMove, defer_bot: true })
       });
 
       const payload = await parseJsonPayload(response);
@@ -331,15 +318,42 @@ export function PlayPage() {
       if (!payload) {
         throw new Error("Server returned an empty move response.");
       }
+      if (!payload.game_state) {
+        throw new Error("Server returned an incomplete move response.");
+      }
 
       setLastExchange(payload);
+      setGame(payload.game_state);
       setMoveInput("");
       setPendingPromotion(null);
       setPromotionSelection("");
       clearSelection();
-      await refreshGameState(game.game_id);
+
+      if (payload.game_state.status === "active" && payload.game_state.turn !== playerColor) {
+        setAiThinking(true);
+        const botResponse = await fetch(apiUrl(`/api/games/${game.game_id}/bot-move`), {
+          method: "POST",
+        });
+        const botPayload = await parseJsonPayload(botResponse);
+        if (!botResponse.ok) {
+          throw new Error(pickApiErrorMessage(botResponse, botPayload, "Failed to play bot move"));
+        }
+        if (!botPayload || !botPayload.game_state) {
+          throw new Error("Server returned a bot move response without game_state.");
+        }
+        setLastExchange((current) => ({
+          player_move: payload.player_move,
+          bot_move: botPayload.bot_move ?? null,
+          bot_source: botPayload.bot_source ?? null,
+          bot_confidence: botPayload.bot_confidence ?? null,
+        }));
+        setGame(botPayload.game_state);
+      }
     } catch (err) {
       setError(normalizeRequestError(err, "Failed to play move"));
+      if (pendingPromotion) {
+        setPromotionSelection("");
+      }
     } finally {
       setAiThinking(false);
       setLoading(false);
@@ -608,7 +622,7 @@ export function PlayPage() {
           </button>
         </div>
 
-        {pendingPromotion && <p className="promotion-hint">Choose promotion from the dropdown on the destination square.</p>}
+        {pendingPromotion && <p className="promotion-hint">Choose a promotion piece on the destination square.</p>}
 
         {sanRows.length > 0 && (
           <section className="history">
@@ -711,7 +725,8 @@ export function PlayPage() {
                 fen={game?.fen || ""}
                 selectedSquare={selectedSquare}
                 targetSquares={targetSquares}
-                lastMove={opponentLastMove.uci}
+                lastMove={game?.last_move || null}
+                moveAnimationToken={game?.moves?.length || 0}
                 checkedKingSquare={game?.checked_king_square || null}
                 perspective={boardPerspective}
                 isTransitioning={aiThinking}
@@ -719,8 +734,10 @@ export function PlayPage() {
                   pendingPromotion
                     ? {
                         square: pendingPromotion.to,
+                        fromSquare: pendingPromotion.from,
                         options: pendingPromotion.options,
                         selectedOption: promotionSelection,
+                        pieceColor: playerColor,
                       }
                     : null
                 }

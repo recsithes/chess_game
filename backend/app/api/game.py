@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 
 from app.models.schemas import (
+    BotMoveResponse,
     GameCreateRequest,
     GameStateResponse,
     MoveRequest,
@@ -67,7 +68,7 @@ def play_move(game_id: str, payload: MoveRequest, request: Request) -> MoveRespo
     bot_source = None
     bot_confidence = None
     status, _ = chess_service.get_status(session)
-    if status == "active":
+    if status == "active" and not payload.defer_bot:
         recommendation = bot_service.recommend_move(
             board=session.board,
             level=session.bot_level,
@@ -84,6 +85,42 @@ def play_move(game_id: str, payload: MoveRequest, request: Request) -> MoveRespo
         bot_move=str(bot_move) if bot_move is not None else None,
         bot_source=str(bot_source) if bot_source is not None else None,
         bot_confidence=float(bot_confidence) if bot_confidence is not None else None,
+        game_state=GameStateResponse(**chess_service.to_payload(session)),
+    )
+
+
+@router.post("/{game_id}/bot-move", response_model=BotMoveResponse)
+def play_bot_move(game_id: str, request: Request) -> BotMoveResponse:
+    chess_service = request.app.state.chess_service
+    bot_service = request.app.state.bot_service
+
+    session = chess_service.get_game(game_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    status, _ = chess_service.get_status(session)
+    if status != "active":
+        raise HTTPException(status_code=400, detail="Game already finished")
+
+    if chess_service.is_player_turn(session):
+        raise HTTPException(status_code=409, detail="Cannot play bot move: it is currently the player's turn")
+
+    recommendation = bot_service.recommend_move(
+        board=session.board,
+        level=session.bot_level,
+        mode=session.bot_mode,
+    )
+    bot_move = recommendation.get("move")
+    bot_source = recommendation.get("source")
+    bot_confidence = recommendation.get("confidence")
+    if bot_move:
+        chess_service.apply_move(session, str(bot_move))
+
+    return BotMoveResponse(
+        bot_move=str(bot_move) if bot_move is not None else None,
+        bot_source=str(bot_source) if bot_source is not None else None,
+        bot_confidence=float(bot_confidence) if bot_confidence is not None else None,
+        game_state=GameStateResponse(**chess_service.to_payload(session)),
     )
 
 

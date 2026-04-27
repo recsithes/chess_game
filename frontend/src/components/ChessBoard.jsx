@@ -76,11 +76,36 @@ function coordinateLabels(square, displayIndex) {
   };
 }
 
+function promotionPieceCode(option, pieceColor) {
+  if (!option) {
+    return "";
+  }
+  const normalized = option.toLowerCase();
+  return pieceColor === "black" ? normalized : normalized.toUpperCase();
+}
+
+function promotionPreviewPieceCode(squareName, pieceCode, promotionPicker) {
+  if (!promotionPicker || !promotionPicker.selectedOption) {
+    return pieceCode;
+  }
+
+  if (promotionPicker.fromSquare === squareName) {
+    return "";
+  }
+
+  if (promotionPicker.square === squareName) {
+    return promotionPieceCode(promotionPicker.selectedOption, promotionPicker.pieceColor);
+  }
+
+  return pieceCode;
+}
+
 export function ChessBoard({
   fen,
   selectedSquare,
   targetSquares,
   lastMove,
+  moveAnimationToken = 0,
   checkedKingSquare,
   perspective = "white",
   isTransitioning = false,
@@ -97,14 +122,18 @@ export function ChessBoard({
     <div className={["board", isTransitioning ? "is-transitioning" : ""].filter(Boolean).join(" ")} role="img" aria-label="Chess board">
       {displaySquares.map((squareName, index) => {
         const pieceCode = squareToPiece.get(squareName) || "";
-        const piece = pieceCode ? PIECE_MAP[pieceCode] || "" : "";
-        const pieceTone = pieceCode && pieceCode === pieceCode.toUpperCase() ? "white-piece" : "black-piece";
         const isSelected = selectedSquare === squareName;
         const isTarget = targetSet.has(squareName);
         const isLastMove = isLastMoveSquare(squareName, lastMove);
+        const isLastMoveFrom = Boolean(lastMove) && squareName === lastMove.slice(0, 2);
+        const isLastMoveTo = Boolean(lastMove) && squareName === lastMove.slice(2, 4);
         const isCheckedKing = checkedKingSquare === squareName;
         const hasPromotionPicker = promotionPicker && promotionPicker.square === squareName;
+        const displayPieceCode = promotionPreviewPieceCode(squareName, pieceCode, promotionPicker);
+        const piece = displayPieceCode ? PIECE_MAP[displayPieceCode] || "" : "";
+        const pieceTone = displayPieceCode && displayPieceCode === displayPieceCode.toUpperCase() ? "white-piece" : "black-piece";
         const labels = coordinateLabels(squareName, index);
+        const showPromotionPicker = hasPromotionPicker && !promotionPicker.selectedOption;
 
         const className = [
           "square",
@@ -112,6 +141,8 @@ export function ChessBoard({
           isSelected ? "selected" : "",
           isTarget ? "target" : "",
           isLastMove ? "last-move" : "",
+          isLastMoveFrom ? "last-move-from" : "",
+          isLastMoveTo ? "last-move-to" : "",
           isCheckedKing ? "checked" : "",
         ]
           .filter(Boolean)
@@ -126,38 +157,41 @@ export function ChessBoard({
               aria-label={`Square ${squareName}`}
             >
               {isTarget && <span className="target-dot" aria-hidden="true" />}
-              <span className={["piece-symbol", pieceTone].filter(Boolean).join(" ")}>{piece}</span>
+              <span
+                className={["piece-symbol", pieceTone].filter(Boolean).join(" ")}
+                data-move-animation-token={isLastMoveTo ? moveAnimationToken : undefined}
+              >
+                {piece}
+              </span>
               {labels.rank && <small className="rank-label">{labels.rank}</small>}
               {labels.file && <small className="file-label">{labels.file}</small>}
             </button>
-            {hasPromotionPicker && (
-              <select
-                className="promotion-dropdown"
-                value={promotionPicker.selectedOption || ""}
-                autoFocus
-                aria-label={`Choose promotion piece on ${squareName}`}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") {
-                    event.preventDefault();
-                    onPromotionCancel?.();
-                  }
-                }}
-                onChange={(event) => {
-                  const option = event.target.value;
-                  if (option) {
-                    onPromotionSelect?.(option);
-                  }
-                }}
-              >
-                <option value="" disabled>
-                  Promote
-                </option>
-                {promotionPicker.options.map((option) => (
-                  <option key={option} value={option}>
-                    {option.toUpperCase()}
-                  </option>
-                ))}
-              </select>
+            {showPromotionPicker && (
+              <div className="promotion-picker" role="group" aria-label={`Choose promotion piece on ${squareName}`}>
+                {promotionPicker.options.map((option, optionIndex) => {
+                  const optionCode = promotionPieceCode(option, promotionPicker.pieceColor);
+                  const optionSymbol = PIECE_MAP[optionCode] || option.toUpperCase();
+                  const optionTone = optionCode === optionCode.toUpperCase() ? "white-piece" : "black-piece";
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      className="promotion-option"
+                      aria-label={`Promote to ${option.toUpperCase()}`}
+                      autoFocus={optionIndex === 0}
+                      onKeyDown={(event) => {
+                        if (event.key === "Escape") {
+                          event.preventDefault();
+                          onPromotionCancel?.();
+                        }
+                      }}
+                      onClick={() => onPromotionSelect?.(option)}
+                    >
+                      <span className={["piece-symbol", optionTone].filter(Boolean).join(" ")}>{optionSymbol}</span>
+                    </button>
+                  );
+                })}
+              </div>
             )}
           </div>
         );
