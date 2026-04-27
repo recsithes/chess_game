@@ -134,7 +134,6 @@ export function ChessBoard({
               <select
                 className="promotion-dropdown"
                 value={promotionPicker.selectedOption || ""}
-                autoFocus
                 aria-label={`Choose promotion piece on ${squareName}`}
                 onChange={(event) => {
                   const option = event.target.value;

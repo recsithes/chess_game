@@ -221,7 +221,6 @@ function captureScore(pieces) {
 
 export function PlayPage() {
   const [playerColor, setPlayerColor] = useState("white");
-  const botMode = "engine";
   const [botLevel, setBotLevel] = useState(5);
   const [game, setGame] = useState(null);
   const [moveInput, setMoveInput] = useState("");
@@ -285,7 +284,7 @@ export function PlayPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           player_color: playerColor,
-          bot_mode: botMode,
+          bot_mode: "engine",
           bot_level: Math.max(0, Math.min(50, Number(botLevel)))
         })
       });
