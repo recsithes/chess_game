@@ -110,10 +110,8 @@ export function ChessBoard({
         const isLastMove = isLastMoveSquare(squareName, lastMove);
         const isCheckedKing = checkedKingSquare === squareName;
         const hasPromotionPicker = promotionPicker && promotionPicker.square === squareName;
-        const isPromotionFromSquare = Boolean(
-          promotionPicker && promotionPicker.selectedOption && promotionPicker.fromSquare === squareName
-        );
-        const isPromotionPreviewSquare = Boolean(hasPromotionPicker && promotionPicker.selectedOption);
+        const isPromotionFromSquare = promotionPicker && promotionPicker.selectedOption && promotionPicker.fromSquare === squareName;
+        const isPromotionPreviewSquare = hasPromotionPicker && promotionPicker.selectedOption;
         const previewPieceCode = isPromotionPreviewSquare
           ? promotionPieceCode(promotionPicker.selectedOption, promotionPicker.pieceColor)
           : "";
