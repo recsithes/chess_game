@@ -541,7 +541,7 @@ export function PlayPage() {
           </label>
 
           <p className="bot-help">
-            Bot level controls engine strength (0-50). A single engine mode is now used for all games.
+            Bot level controls engine strength (0-50). A single engine mode is used for all games.
           </p>
 
           <button onClick={startGame} disabled={loading}>
