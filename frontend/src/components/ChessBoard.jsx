@@ -133,7 +133,7 @@ export function ChessBoard({
         const piece = displayPieceCode ? PIECE_MAP[displayPieceCode] || "" : "";
         const pieceTone = displayPieceCode && displayPieceCode === displayPieceCode.toUpperCase() ? "white-piece" : "black-piece";
         const labels = coordinateLabels(squareName, index);
-        const shouldShowPromotionPicker = hasPromotionPicker && !promotionPicker.selectedOption;
+        const showPromotionPicker = hasPromotionPicker && !promotionPicker.selectedOption;
 
         const className = [
           "square",
@@ -166,7 +166,7 @@ export function ChessBoard({
               {labels.rank && <small className="rank-label">{labels.rank}</small>}
               {labels.file && <small className="file-label">{labels.file}</small>}
             </button>
-            {shouldShowPromotionPicker && (
+            {showPromotionPicker && (
               <div className="promotion-picker" role="group" aria-label={`Choose promotion piece on ${squareName}`}>
                 {promotionPicker.options.map((option, optionIndex) => {
                   const optionCode = promotionPieceCode(option, promotionPicker.pieceColor);

@@ -342,9 +342,9 @@ export function PlayPage() {
           throw new Error("Server returned a bot move response without game_state.");
         }
         setLastExchange((current) => ({
-          player_move: current?.player_move || payload.player_move,
-          bot_move: botPayload.bot_move || null,
-          bot_source: botPayload.bot_source || null,
+          player_move: current?.player_move ?? payload.player_move,
+          bot_move: botPayload.bot_move ?? null,
+          bot_source: botPayload.bot_source ?? null,
           bot_confidence: botPayload.bot_confidence ?? null,
         }));
         setGame(botPayload.game_state);
