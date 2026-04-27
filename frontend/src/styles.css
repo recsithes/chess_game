@@ -74,6 +74,21 @@ p {
   max-width: 560px;
 }
 
+.readonly-field {
+  border: 1px solid #dbc6ab;
+  border-radius: 10px;
+  padding: 10px;
+  color: #5f5448;
+  background: #f7efe3;
+  font-weight: 600;
+}
+
+.readonly-static {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+}
+
 label {
   display: flex;
   flex-direction: column;
@@ -161,22 +176,10 @@ button:disabled {
   gap: 8px;
 }
 
-.promotion-box {
-  margin-top: 12px;
-  border: 1px solid #dbc2a2;
-  border-radius: 10px;
-  background: #f8ebda;
-  padding: 10px;
-}
-
-.promotion-box p {
-  margin-bottom: 8px;
-  color: #5f4a36;
-}
-
-.promotion-actions {
-  display: flex;
-  gap: 8px;
+.promotion-hint {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #694d2e;
 }
 
 .history,
@@ -186,6 +189,7 @@ button:disabled {
   border-radius: 10px;
   background: #f8ecde;
   padding: 10px;
+  overflow-x: auto;
 }
 
 .history h2,
@@ -348,6 +352,12 @@ button:disabled {
   box-shadow:
     0 16px 40px var(--board-shadow),
     inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.board.is-transitioning {
+  opacity: 0.8;
+  transform: scale(0.995);
 }
 
 .board-stage {
@@ -427,6 +437,14 @@ button:disabled {
   font-size: clamp(24px, 4vw, 44px);
   position: relative;
   transition: box-shadow 120ms ease;
+  width: 100%;
+  height: 100%;
+}
+
+.square-cell {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
 }
 
 .square.light {
@@ -460,6 +478,35 @@ button:disabled {
   border-radius: 50%;
   background: rgba(16, 30, 39, 0.28);
   pointer-events: none;
+}
+
+.promotion-dropdown {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 76%;
+  z-index: 3;
+  font-size: 12px;
+  padding: 6px;
+  border: 1px solid #885c2f;
+  background: #fff8ec;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+}
+
+.ai-thinking-overlay {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(15, 60, 101, 0.88);
+  pointer-events: none;
+  z-index: 4;
 }
 
 .piece-symbol {
@@ -508,6 +555,14 @@ button:disabled {
   margin-top: 10px;
   font-weight: 700;
   color: #a11e1e;
+}
+
+input:focus-visible,
+select:focus-visible,
+button:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #1e5fa2;
+  outline-offset: 1px;
 }
 
 @media (min-width: 1240px) {

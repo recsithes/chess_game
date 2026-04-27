@@ -221,8 +221,7 @@ function captureScore(pieces) {
 
 export function PlayPage() {
   const [playerColor, setPlayerColor] = useState("white");
-  const [botMode, setBotMode] = useState("engine");
-  const [botLevel, setBotLevel] = useState(5);
+  const [engineLevel, setEngineLevel] = useState(5);
   const [game, setGame] = useState(null);
   const [moveInput, setMoveInput] = useState("");
   const [lastExchange, setLastExchange] = useState(null);
@@ -233,10 +232,13 @@ export function PlayPage() {
   const [pgnCopied, setPgnCopied] = useState(false);
   const [boardPerspective, setBoardPerspective] = useState("white");
   const [pendingPromotion, setPendingPromotion] = useState(null);
+  const [promotionSelection, setPromotionSelection] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [aiThinking, setAiThinking] = useState(false);
 
   const legalMoves = game?.legal_moves || [];
+  const hasPendingPromotion = Boolean(pendingPromotion);
 
   const canPlayMove = useMemo(() => {
     if (!game) {
@@ -274,6 +276,7 @@ export function PlayPage() {
     setPgnCopied(false);
     setBoardPerspective(playerColor);
     setPendingPromotion(null);
+    setPromotionSelection("");
     clearSelection();
 
     try {
@@ -282,8 +285,8 @@ export function PlayPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           player_color: playerColor,
-          bot_mode: botMode,
-          bot_level: Math.max(0, Math.min(50, Number(botLevel)))
+          bot_mode: "engine",
+          bot_level: Math.max(0, Math.min(50, Number(engineLevel)))
         })
       });
 
@@ -311,6 +314,7 @@ export function PlayPage() {
     }
 
     setLoading(true);
+    setAiThinking(true);
     setError("");
 
     try {
@@ -331,17 +335,23 @@ export function PlayPage() {
       setLastExchange(payload);
       setMoveInput("");
       setPendingPromotion(null);
+      setPromotionSelection("");
       clearSelection();
       await refreshGameState(game.game_id);
     } catch (err) {
       setError(normalizeRequestError(err, "Failed to play move"));
     } finally {
+      setAiThinking(false);
       setLoading(false);
     }
   }
 
   function handleSquareClick(squareName) {
     if (!canPlayMove || loading || !game) {
+      return;
+    }
+
+    if (hasPendingPromotion) {
       return;
     }
 
@@ -373,6 +383,7 @@ export function PlayPage() {
     const promotionOptions = promotionOptionsForMove(legalMoves, selectedSquare, squareName);
     if (promotionOptions.length > 0) {
       setPendingPromotion({ from: selectedSquare, to: squareName, options: promotionOptions });
+      setPromotionSelection("");
       return;
     }
 
@@ -390,9 +401,16 @@ export function PlayPage() {
     if (!pendingPromotion) {
       return;
     }
+    setPromotionSelection(piece);
     const move = `${pendingPromotion.from}${pendingPromotion.to}${piece}`;
     setMoveInput(move);
     submitMove(move);
+  }
+
+  function cancelPromotionSelection() {
+    setPendingPromotion(null);
+    setPromotionSelection("");
+    clearSelection();
   }
 
   async function fetchRecommendation() {
@@ -509,10 +527,16 @@ export function PlayPage() {
 
           <label>
             Bot mode
-            <select value={botMode} onChange={(event) => setBotMode(event.target.value)}>
-              <option value="engine">Engine Bot</option>
-              <option value="ml">ML Bot</option>
-            </select>
+            <div className="readonly-field readonly-static" aria-label="Bot mode">
+              Engine Bot
+            </div>
+          </label>
+
+          <label>
+            Bot model
+            <div className="readonly-field readonly-static" aria-label="Bot model">
+              Stockfish + fallback search
+            </div>
           </label>
 
           <label>
@@ -521,13 +545,13 @@ export function PlayPage() {
               type="number"
               min={0}
               max={50}
-              value={botLevel}
-              onChange={(event) => setBotLevel(event.target.value)}
+              value={engineLevel}
+              onChange={(event) => setEngineLevel(event.target.value)}
             />
           </label>
 
           <p className="bot-help">
-            Bot level controls engine strength (0-50). Engine Bot always uses this level. ML Bot first tries the ML model, then falls back to engine/heuristic using this level when needed.
+            Bot level controls engine strength (0-50). A single engine mode is used for all games.
           </p>
 
           <button onClick={startGame} disabled={loading}>
@@ -568,36 +592,23 @@ export function PlayPage() {
             placeholder="e2e4"
             value={moveInput}
             onChange={(event) => setMoveInput(event.target.value)}
-            disabled={!canPlayMove || loading}
+            disabled={!canPlayMove || loading || hasPendingPromotion}
           />
-          <button onClick={submitMove} disabled={!canPlayMove || loading}>
+          <button onClick={submitMove} disabled={!canPlayMove || loading || hasPendingPromotion}>
             Play Move
           </button>
-          <button onClick={fetchRecommendation} disabled={!game || loading}>
+          <button onClick={fetchRecommendation} disabled={!game || loading || hasPendingPromotion}>
             Recommend Move
           </button>
-          <button onClick={fetchPgn} disabled={!game || loading}>
+          <button onClick={fetchPgn} disabled={!game || loading || hasPendingPromotion}>
             Load PGN
           </button>
-          <button onClick={copyPgn} disabled={!pgn}>
+          <button onClick={copyPgn} disabled={!pgn || hasPendingPromotion}>
             {pgnCopied ? "PGN Copied" : "Copy PGN"}
           </button>
         </div>
 
-        {pendingPromotion && (
-          <div className="promotion-box">
-            <p>
-              Choose promotion for {pendingPromotion.from} to {pendingPromotion.to}
-            </p>
-            <div className="promotion-actions">
-              {pendingPromotion.options.map((option) => (
-                <button key={option} type="button" onClick={() => choosePromotion(option)}>
-                  {option.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {pendingPromotion && <p className="promotion-hint">Choose promotion from the dropdown on the destination square.</p>}
 
         {sanRows.length > 0 && (
           <section className="history">
@@ -703,9 +714,22 @@ export function PlayPage() {
                 lastMove={opponentLastMove.uci}
                 checkedKingSquare={game?.checked_king_square || null}
                 perspective={boardPerspective}
+                isTransitioning={aiThinking}
+                promotionPicker={
+                  pendingPromotion
+                    ? {
+                        square: pendingPromotion.to,
+                        options: pendingPromotion.options,
+                        selectedOption: promotionSelection,
+                      }
+                    : null
+                }
                 onSquareClick={handleSquareClick}
+                onPromotionSelect={choosePromotion}
+                onPromotionCancel={cancelPromotionSelection}
               />
               {gameFinished && <div className="endgame-banner">{endgameMessage}</div>}
+              {aiThinking && <div className="ai-thinking-overlay">AI is making a move…</div>}
             </div>
           </div>
 
