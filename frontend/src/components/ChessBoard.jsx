@@ -83,14 +83,17 @@ export function ChessBoard({
   lastMove,
   checkedKingSquare,
   perspective = "white",
+  isTransitioning = false,
+  promotionPicker = null,
   onSquareClick,
+  onPromotionSelect,
 }) {
   const squareToPiece = fen ? fenBoardToMap(fen) : new Map();
   const displaySquares = buildDisplaySquares(perspective);
   const targetSet = new Set(targetSquares || []);
 
   return (
-    <div className="board" role="img" aria-label="Chess board">
+    <div className={["board", isTransitioning ? "is-transitioning" : ""].filter(Boolean).join(" ")} role="img" aria-label="Chess board">
       {displaySquares.map((squareName, index) => {
         const pieceCode = squareToPiece.get(squareName) || "";
         const piece = pieceCode ? PIECE_MAP[pieceCode] || "" : "";
@@ -99,6 +102,7 @@ export function ChessBoard({
         const isTarget = targetSet.has(squareName);
         const isLastMove = isLastMoveSquare(squareName, lastMove);
         const isCheckedKing = checkedKingSquare === squareName;
+        const hasPromotionPicker = promotionPicker && promotionPicker.square === squareName;
         const labels = coordinateLabels(squareName, index);
 
         const className = [
@@ -113,18 +117,42 @@ export function ChessBoard({
           .join(" ");
 
         return (
-          <button
-            key={index}
-            type="button"
-            className={className}
-            onClick={() => onSquareClick?.(squareName)}
-            aria-label={`Square ${squareName}`}
-          >
-            {isTarget && <span className="target-dot" aria-hidden="true" />}
-            <span className={["piece-symbol", pieceTone].filter(Boolean).join(" ")}>{piece}</span>
-            {labels.rank && <small className="rank-label">{labels.rank}</small>}
-            {labels.file && <small className="file-label">{labels.file}</small>}
-          </button>
+          <div key={squareName} className="square-cell">
+            <button
+              type="button"
+              className={className}
+              onClick={() => onSquareClick?.(squareName)}
+              aria-label={`Square ${squareName}`}
+              disabled={Boolean(hasPromotionPicker)}
+            >
+              {isTarget && <span className="target-dot" aria-hidden="true" />}
+              <span className={["piece-symbol", pieceTone].filter(Boolean).join(" ")}>{piece}</span>
+              {labels.rank && <small className="rank-label">{labels.rank}</small>}
+              {labels.file && <small className="file-label">{labels.file}</small>}
+            </button>
+            {hasPromotionPicker && (
+              <select
+                className="promotion-dropdown"
+                defaultValue=""
+                aria-label={`Choose promotion piece on ${squareName}`}
+                onChange={(event) => {
+                  const option = event.target.value;
+                  if (option) {
+                    onPromotionSelect?.(option);
+                  }
+                }}
+              >
+                <option value="" disabled>
+                  Promote
+                </option>
+                {promotionPicker.options.map((option) => (
+                  <option key={option} value={option}>
+                    {option.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
         );
       })}
     </div>

@@ -221,7 +221,7 @@ function captureScore(pieces) {
 
 export function PlayPage() {
   const [playerColor, setPlayerColor] = useState("white");
-  const [botMode, setBotMode] = useState("engine");
+  const botMode = "engine";
   const [botLevel, setBotLevel] = useState(5);
   const [game, setGame] = useState(null);
   const [moveInput, setMoveInput] = useState("");
@@ -235,6 +235,7 @@ export function PlayPage() {
   const [pendingPromotion, setPendingPromotion] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [aiThinking, setAiThinking] = useState(false);
 
   const legalMoves = game?.legal_moves || [];
 
@@ -311,6 +312,7 @@ export function PlayPage() {
     }
 
     setLoading(true);
+    setAiThinking(true);
     setError("");
 
     try {
@@ -336,6 +338,7 @@ export function PlayPage() {
     } catch (err) {
       setError(normalizeRequestError(err, "Failed to play move"));
     } finally {
+      setAiThinking(false);
       setLoading(false);
     }
   }
@@ -509,10 +512,12 @@ export function PlayPage() {
 
           <label>
             Bot mode
-            <select value={botMode} onChange={(event) => setBotMode(event.target.value)}>
-              <option value="engine">Engine Bot</option>
-              <option value="ml">ML Bot</option>
-            </select>
+            <input type="text" value="Engine Bot" readOnly />
+          </label>
+
+          <label>
+            Bot model
+            <input type="text" value="Stockfish + fallback search" readOnly />
           </label>
 
           <label>
@@ -527,7 +532,7 @@ export function PlayPage() {
           </label>
 
           <p className="bot-help">
-            Bot level controls engine strength (0-50). Engine Bot always uses this level. ML Bot first tries the ML model, then falls back to engine/heuristic using this level when needed.
+            Bot level controls engine strength (0-50). A single stronger engine flow is now used for all games.
           </p>
 
           <button onClick={startGame} disabled={loading}>
@@ -584,20 +589,7 @@ export function PlayPage() {
           </button>
         </div>
 
-        {pendingPromotion && (
-          <div className="promotion-box">
-            <p>
-              Choose promotion for {pendingPromotion.from} to {pendingPromotion.to}
-            </p>
-            <div className="promotion-actions">
-              {pendingPromotion.options.map((option) => (
-                <button key={option} type="button" onClick={() => choosePromotion(option)}>
-                  {option.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {pendingPromotion && <p className="promotion-hint">Choose promotion from the dropdown on the destination square.</p>}
 
         {sanRows.length > 0 && (
           <section className="history">
@@ -703,9 +695,20 @@ export function PlayPage() {
                 lastMove={opponentLastMove.uci}
                 checkedKingSquare={game?.checked_king_square || null}
                 perspective={boardPerspective}
+                isTransitioning={aiThinking}
+                promotionPicker={
+                  pendingPromotion
+                    ? {
+                        square: pendingPromotion.to,
+                        options: pendingPromotion.options,
+                      }
+                    : null
+                }
                 onSquareClick={handleSquareClick}
+                onPromotionSelect={choosePromotion}
               />
               {gameFinished && <div className="endgame-banner">{endgameMessage}</div>}
+              {aiThinking && <div className="ai-thinking-overlay">AI is making a move…</div>}
             </div>
           </div>
 
